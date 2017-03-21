@@ -3,13 +3,21 @@ import scala.collection.mutable.ListBuffer
 
 object Problem2 {
   
-  
-  def calcCell(input:String):Array[Int]={
+  def getLocation(input:String):Int={
     val s:Array[String]=input.split(",");
     val x=((s(0).toDouble)/20).toInt+1
     val y=499-((s(1).toDouble)/20).toInt
     val index=x+500*y
-    val list = ListBuffer[Int](index,index+1,index-1,index+500,index-500,index+501,index-501,index+499,index-499)
+    return index   
+  }
+  
+  
+  def getNeighbors(input:String):Array[Int]={
+    val s:Array[String]=input.split(",");
+    val x=((s(0).toDouble)/20).toInt+1
+    val y=499-((s(1).toDouble)/20).toInt
+    val index=x+500*y
+    val list = ListBuffer[Int](index+1,index-1,index+500,index-500,index+501,index-501,index+499,index-499)
     if(x==1){
       list-=(index-1,index-501,index+499)        
     }
@@ -26,7 +34,7 @@ object Problem2 {
   }
   
    def avg( a:(Int, Int)) : (Int, Float)= {
-      var num=9;
+      var num=8;
       if(a._1%500==1)
         num-=3
       if(a._1%500==0)
@@ -49,9 +57,9 @@ object Problem2 {
 
     val sc = spark.sparkContext    
 
-    val textFileF = sc.textFile("/home/mqp/p/p.txt")
-
-    val cells = textFileF.map(line=>calcCell(line)).flatMap(line=>line).map(word=>(word,1)).reduceByKey((x,y) => x + y)
-    val rdi=cells.map(line=>avg(line)).sortBy(_._2,false).take(50).foreach(println)
+    val textFileF = sc.textFile("/home/mqp/p/p.txt",2).cache
+    val cell = textFileF.map(line=>(getLocation(line),1)).reduceByKey((x,y) => x + y)
+    val avgNeighbor = textFileF.map(line=>getNeighbors(line)).flatMap(line=>line).map(word=>(word,1)).reduceByKey((x,y) => x + y).map(line=>avg(line))
+    val rdi=cell.join(avgNeighbor,2).map(line=>(line._1,line._2._1/line._2._2)).sortBy(_._2,false).take(50).foreach(println)
   }
 }
