@@ -50,6 +50,10 @@ object Problem2 {
   
 
   def main(args: Array[String]) {
+    if(args.length<1){
+      println("Please Input Path!")
+      return
+    }
     val spark = SparkSession.builder()
       .appName("Problem2")
       .master("local[*]")
@@ -57,9 +61,9 @@ object Problem2 {
 
     val sc = spark.sparkContext    
 
-    val textFileF = sc.textFile("/home/mqp/p/p.txt",2).cache
+    val textFileF = sc.textFile(args(0),4).cache
     val cell = textFileF.map(line=>(getLocation(line),1)).reduceByKey((x,y) => x + y)
     val avgNeighbor = textFileF.map(line=>getNeighbors(line)).flatMap(line=>line).map(word=>(word,1)).reduceByKey((x,y) => x + y).map(line=>avg(line))
-    val rdi=cell.join(avgNeighbor,2).map(line=>(line._1,line._2._1/line._2._2)).sortBy(_._2,false).take(50).foreach(println)
+    val rdi=cell.join(avgNeighbor,4).map(line=>(line._1,line._2._1/line._2._2)).sortBy(_._2,false).take(50).foreach(println)
   }
 }
